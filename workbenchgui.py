@@ -7,6 +7,7 @@ from tkinter.ttk import OptionMenu  # Explicitly importing OptionMenu #first it 
 import tkcalendar as tkcal
 from tkcalendar import Calendar
 from datetime import date #getting date for blocking user to enter input before the current date
+import requests
 
 num1 = 0
 num2 = 0
@@ -14,6 +15,7 @@ num2 = 0
 root = tk.Tk()
 
 root.title("Booking.com")
+base_url = "https://www.booking.com/searchresults.html?ss={}&ssne={}&ssne_untouched={}&efdco=1&label=gen173nr-1FCAEoggI46AdIM1gEaOQBiAEBmAExuAEHyAEP2AEB6AEBAECiAIBqAIDuAKo8sKxBsACAdICJGZlZWVmNGJjLWI2OGEtNGM0OS05ODk0LTM2ZGQ4YzkxYzY0MNgCBeACAQ&aid=304142&lang=en-us&sb=1&src_elem=sb&src=index&dest_id={}&dest_type=city&checkin={}&checkout={}&group_adults={}&no_rooms={}&group_children={}"
 
 european_cities = [
     'London', 'Paris', 'Rome', 'Madrid', 'Berlin', 'Athens', 'Vienna', 'Warsaw', 'Amsterdam', 'Brussels',
@@ -73,6 +75,25 @@ def calendar_date_selected(event):
     elif event.widget == check_out_cal:
         select_check_out_date()
 
+def check_response_for_error():
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        print("Response is valid.")
+    else:
+        print("Error Code:", response.status_code)
+        
+        if response.status_code == 404:
+            messagebox.showinfo("Error: The requested page was not found")
+        elif response.status_code == 400:
+            messagebox.showerror("Error: Bad request. Please check your input parameters.")
+        elif response.status_code == 401:
+            messagebox.showerror("Error: Unauthorized access. Please check your credentials.")
+        elif response.status_code == 500:
+            messagebox.showerror("Error: Internal server error. Please try again later.")
+        else:
+            messagebox.showerror("Error: An unknown error occurred.")
+
 def attribute_transfer():
     global city, checkin_date, checkout_date
     if select_city and select_check_in_date() and select_check_out_date():
@@ -86,6 +107,9 @@ def attribute_transfer():
             city = selected_city.get()
             checkin_date = select_check_in_date()
             checkout_date = select_check_out_date()
+
+            url = base_url.format(city, city, city, city, checkin_date, checkout_date, num_adults, num_rooms, num_children)
+            check_response_for_error(url)
 
 
 # Create blue and white frames
