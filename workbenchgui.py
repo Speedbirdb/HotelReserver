@@ -13,7 +13,9 @@ num1 = 0
 num2 = 0
 
 root = tk.Tk()
+global url
 
+#these properties moved here due to an circular import occurrance
 root.title("Booking.com")
 base_url = "https://www.booking.com/searchresults.html?ss={}&ssne={}&ssne_untouched={}&efdco=1&label=gen173nr-1FCAEoggI46AdIM1gEaOQBiAEBmAExuAEHyAEP2AEB6AEBAECiAIBqAIDuAKo8sKxBsACAdICJGZlZWVmNGJjLWI2OGEtNGM0OS05ODk0LTM2ZGQ4YzkxYzY0MNgCBeACAQ&aid=304142&lang=en-us&sb=1&src_elem=sb&src=index&dest_id={}&dest_type=city&checkin={}&checkout={}&group_adults={}&no_rooms={}&group_children={}"
 
@@ -29,6 +31,9 @@ european_cities = [
     'Horta', 'Bologna', 'Turin', 'Genoa', 'Verona', 'Padua', 'Trieste', 'Bari', 'Palermo', 'Catania',
     'Naples', 'Salerno', 'Cagliari', 'Olbia', 'Alghero', 'Sofia', 'Varna', 'Plovdiv', 'Burgas', 'Ruse'
 ]
+
+global checker
+checker = False
 
 # Function to adjust the layout based on window size
 def on_resize(event):
@@ -53,14 +58,14 @@ check_out_var = StringVar(root)
 check_in_var = StringVar(root)
 
 #these are added
-def select_check_in_date():
-    date = check_in_cal.get_date()
+def select_check_in_date(calendar):
+    date = check_in_cal.get_date(calendar)
     check_in_var.set(date)
     attribute_transfer()
     return date #for the attribute_transfer method
 
-def select_check_out_date():
-    date = check_out_cal.get_date()
+def select_check_out_date(calendar):
+    date = check_out_cal.get_date(calendar)
     check_out_var.set(date)
     attribute_transfer()
     return date # for the attribute_transfer method again
@@ -68,48 +73,53 @@ def select_check_out_date():
 def select_city(event):
     selected_city.set(event)
     attribute_transfer()
+    print("city selection work")
 
 def calendar_date_selected(event):
     if event.widget == check_in_cal:
-        select_check_in_date()
+        select_check_in_date(check_in_cal)
     elif event.widget == check_out_cal:
-        select_check_out_date()
-
-def check_response_for_error():
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        print("Response is valid.")
-    else:
-        print("Error Code:", response.status_code)
-        
-        if response.status_code == 404:
-            messagebox.showinfo("Error: The requested page was not found")
-        elif response.status_code == 400:
-            messagebox.showerror("Error: Bad request. Please check your input parameters.")
-        elif response.status_code == 401:
-            messagebox.showerror("Error: Unauthorized access. Please check your credentials.")
-        elif response.status_code == 500:
-            messagebox.showerror("Error: Internal server error. Please try again later.")
-        else:
-            messagebox.showerror("Error: An unknown error occurred.")
+        select_check_out_date(check_out_cal)
 
 def attribute_transfer():
     global city, checkin_date, checkout_date
-    if select_city and select_check_in_date() and select_check_out_date():
+    if select_city and select_check_in_date(check_in_cal) and select_check_out_date(check_out_cal):
+        print("City:", city)
+        print("Check-in Date:", checkin_date)
+        print("Check-out Date:", checkout_date)
         if(select_check_in_date()<select_check_out_date()):
-            #create messagebox
             messagebox.showinfo("Information", "Check-out date must be after check-in date.")
         elif(select_check_out_date()-select_check_in_date()).days >= 90:
-            #create messagebox for over 90 nights
             messagebox.showinfo("Information", "Maximum stay duration is 90 nights.")
         else:
             city = selected_city.get()
             checkin_date = select_check_in_date()
             checkout_date = select_check_out_date()
 
+            num_adults = 2
+            num_rooms = 1
+            num_children = 0
             url = base_url.format(city, city, city, city, checkin_date, checkout_date, num_adults, num_rooms, num_children)
-            check_response_for_error(url)
+            
+            response = requests.get(url)
+    
+            if response.status_code == 200:
+                print("Response is valid.")
+                checker == True
+                #return boolean value to scrapper.py n start the scrapping process
+                #then in scrapper.py divert the execution to new gui associated python file and continue there
+                root.destroy()
+            else:
+                if response.status_code == 404:
+                    messagebox.showinfo("Error: The requested page was not found")
+                elif response.status_code == 400:
+                    messagebox.showerror("Error: Bad request. Please check your input parameters.")
+                elif response.status_code == 401:
+                    messagebox.showerror("Error: Unauthorized access. Please check your credentials.")
+                elif response.status_code == 500:
+                    messagebox.showerror("Error: Internal server error. Please try again later.")
+                else:
+                    messagebox.showerror("Error: An unknown error occurred.")
 
 
 # Create blue and white frames
@@ -151,8 +161,9 @@ def create_calendar(relx, rely, relwidth, relheight, font):
                 if date_entry < current_date:
                     widget._calendar._dates[date_entry].config(state='disabled')
 
+    # Bind callback function to get the date when the calendar is opened
+    cal.bind("<FocusIn>", lambda event, cal=cal: select_date_from_calendar(cal))
     return cal
-
 
 check_in_cal = None
 check_out_cal = None
@@ -174,21 +185,30 @@ def calendar01sttimeornot():
     global check_in_cal
     if num1 == 0:
         check_in_cal = create_calendar(**check_in_cal_placement_info, font=check_in_cal_font_info)
+        #
         num1 += 1
     else:
         if check_in_cal is not None:
             toggle_calendar(check_in_cal, check_in_cal_placement_info, check_in_cal_font_info)
+    check_in_cal.bind("<FocusIn>", lambda event: calendar_date_selected(event, check_in_cal))
 
 def calendar21sttimeornot():
     global num2
     global check_out_cal
     if num2 == 0:
         check_out_cal = create_calendar(**check_out_cal_placement_info, font=check_out_cal_font_info)
+        #MAybe we can add function to get the date
         num2 += 1
     else:
         if check_out_cal is not None:
             toggle_calendar(check_out_cal, check_out_cal_placement_info, check_out_cal_font_info)
+    check_out_cal.bind("<FocusIn>", lambda event: calendar_date_selected(event, check_out_cal))
 
+def calendar_date_selected(event, calendar):
+    if calendar == check_in_cal:
+        select_check_in_date(calendar)
+    elif calendar == check_out_cal:
+        select_check_out_date(calendar)
 
 styleforuppertext = ttk.Style()
 styleforlowertext = ttk.Style()
@@ -221,5 +241,7 @@ button3 = ttk.Button(root, text="Check-Out", command=calendar21sttimeornot)
 button3.place(relx=0.6, rely=0.4, relwidth=0.2, relheight=0.1)
 
 root.bind("<Configure>", on_resize)
+selected_city.trace_add("write", lambda *args: select_city(selected_city.get()))
 
+root.state("zoomed")
 root.mainloop()

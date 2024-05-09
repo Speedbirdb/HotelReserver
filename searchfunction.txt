@@ -1,0 +1,6 @@
+insert the attribute handling function to run when the "location" aka button1 and the other buttons selected for each time individually. 
+insert control mechanism to run the attribute_transfer function everytime when
+    the location has selected from the list
+    the checkin date has selected from Check-in calendar
+    the checkout date has selected from Check-out calendar
+
