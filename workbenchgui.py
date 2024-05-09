@@ -57,21 +57,29 @@ def on_resize(event):
 check_out_var = StringVar(root)
 check_in_var = StringVar(root)
 
+global selected_info
+selected_info = {}
+
 #these are added
 def select_check_in_date(calendar):
     date = check_in_cal.get_date(calendar)
     check_in_var.set(date)
+    selected_info[1] = date
     attribute_transfer()
+    print("checkin work")
     return date #for the attribute_transfer method
 
 def select_check_out_date(calendar):
     date = check_out_cal.get_date(calendar)
     check_out_var.set(date)
+    selected_info[2] = date
     attribute_transfer()
+    print("checkout work")
     return date # for the attribute_transfer method again
 
 def select_city(event):
     selected_city.set(event)
+    selected_info[0] = selected_city
     attribute_transfer()
     print("city selection work")
 
@@ -83,13 +91,17 @@ def calendar_date_selected(event):
 
 def attribute_transfer():
     global city, checkin_date, checkout_date
-    if select_city and select_check_in_date(check_in_cal) and select_check_out_date(check_out_cal):
-        print("City:", city)
-        print("Check-in Date:", checkin_date)
-        print("Check-out Date:", checkout_date)
-        if(select_check_in_date()<select_check_out_date()):
+    count = 0
+    for x in selected_info:
+        if x is not None:
+            count+=1
+    if count == 3:
+        checkin_date_obj = date.strptime(select_check_in_date(), "%m/%d/%Y")
+        checkout_date_obj = date.strptime(select_check_out_date(), "%m/%d/%Y")
+
+        if checkin_date_obj < checkout_date_obj:
             messagebox.showinfo("Information", "Check-out date must be after check-in date.")
-        elif(select_check_out_date()-select_check_in_date()).days >= 90:
+        elif (checkout_date_obj - checkin_date_obj).days >= 90:
             messagebox.showinfo("Information", "Maximum stay duration is 90 nights.")
         else:
             city = selected_city.get()
@@ -120,6 +132,7 @@ def attribute_transfer():
                     messagebox.showerror("Error: Internal server error. Please try again later.")
                 else:
                     messagebox.showerror("Error: An unknown error occurred.")
+    
 
 
 # Create blue and white frames
@@ -149,20 +162,15 @@ def toggle_calendar(calendar, placement_info, font_info):
         calendar.place(relx=placement_info['relx'], rely=placement_info['rely'], relwidth=placement_info['relwidth'], relheight=placement_info['relheight'])
         calendar.config(font=font_info)
 
+current_date = date.today()
+
 def create_calendar(relx, rely, relwidth, relheight, font):
-    cal = Calendar(root, selectmode='day', year=2024, month=5, day=7)
+    cal = Calendar(root, selectmode='day', year=current_date.year, month=5, day=7)
     cal.place(relx=relx, rely=rely, relwidth=relwidth, relheight=relheight)
     cal.config(font=font)
-
-    current_date = date.today()
-    for widget in cal.winfo_children():
-        if isinstance(widget, tkcal.DateEntry):
-            for date_entry in widget._calendar._dates:
-                if date_entry < current_date:
-                    widget._calendar._dates[date_entry].config(state='disabled')
-
+    cal.config(mindate=date.today())
     # Bind callback function to get the date when the calendar is opened
-    cal.bind("<FocusIn>", lambda event, cal=cal: select_date_from_calendar(cal))
+    cal.bind("<ButtonRelease-1>", lambda event, cal=cal: calendar_date_selected(event, cal))
     return cal
 
 check_in_cal = None
@@ -206,9 +214,9 @@ def calendar21sttimeornot():
 
 def calendar_date_selected(event, calendar):
     if calendar == check_in_cal:
-        select_check_in_date(calendar)
+        select_check_in_date(check_in_cal)
     elif calendar == check_out_cal:
-        select_check_out_date(calendar)
+        select_check_out_date(check_out_cal)
 
 styleforuppertext = ttk.Style()
 styleforlowertext = ttk.Style()
