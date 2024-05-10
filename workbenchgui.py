@@ -60,22 +60,21 @@ check_in_var = StringVar(root)
 global selected_info
 selected_info = {}
 
-#these are added
-def select_check_in_date(calendar):
-    date = check_in_cal.get_date(calendar)
+def select_check_in_date(event, calendar):
+    date = calendar.get_date()
     check_in_var.set(date)
     selected_info[1] = date
     attribute_transfer()
-    print("checkin work")
-    return date #for the attribute_transfer method
+    print("Check-in date selected")
+    return date
 
-def select_check_out_date(calendar):
-    date = check_out_cal.get_date(calendar)
+def select_check_out_date(event, calendar):
+    date = calendar.get_date()
     check_out_var.set(date)
     selected_info[2] = date
     attribute_transfer()
-    print("checkout work")
-    return date # for the attribute_transfer method again
+    print("Check-out date selected")
+    return date
 
 def select_city(event):
     selected_city.set(event)
@@ -83,22 +82,22 @@ def select_city(event):
     attribute_transfer()
     print("city selection work")
 
-def calendar_date_selected(event):
-    if event.widget == check_in_cal:
-        select_check_in_date(check_in_cal)
-    elif event.widget == check_out_cal:
-        select_check_out_date(check_out_cal)
+def calendar_date_selected(event, calendar):
+    print("Calendar date selected")
+    if calendar == check_in_cal:
+        select_check_in_date(event, check_in_cal)
+    elif calendar == check_out_cal:
+        select_check_out_date(event, check_out_cal)
 
 def attribute_transfer():
     global city, checkin_date, checkout_date
     count = 0
     for x in selected_info:
         if x is not None:
-            count+=1
+            count += 1
     if count == 3:
         checkin_date_obj = date.strptime(select_check_in_date(), "%m/%d/%Y")
         checkout_date_obj = date.strptime(select_check_out_date(), "%m/%d/%Y")
-
         if checkin_date_obj < checkout_date_obj:
             messagebox.showinfo("Information", "Check-out date must be after check-in date.")
         elif (checkout_date_obj - checkin_date_obj).days >= 90:
@@ -107,33 +106,24 @@ def attribute_transfer():
             city = selected_city.get()
             checkin_date = select_check_in_date()
             checkout_date = select_check_out_date()
-
             num_adults = 2
             num_rooms = 1
             num_children = 0
             url = base_url.format(city, city, city, city, checkin_date, checkout_date, num_adults, num_rooms, num_children)
-            
             response = requests.get(url)
-    
             if response.status_code == 200:
                 print("Response is valid.")
-                checker == True
-                #return boolean value to scrapper.py n start the scrapping process
-                #then in scrapper.py divert the execution to new gui associated python file and continue there
+                checker = True
+                #return a boolean to start scraping process
                 root.destroy()
             else:
-                if response.status_code == 404:
-                    messagebox.showinfo("Error: The requested page was not found")
-                elif response.status_code == 400:
-                    messagebox.showerror("Error: Bad request. Please check your input parameters.")
-                elif response.status_code == 401:
-                    messagebox.showerror("Error: Unauthorized access. Please check your credentials.")
-                elif response.status_code == 500:
-                    messagebox.showerror("Error: Internal server error. Please try again later.")
-                else:
-                    messagebox.showerror("Error: An unknown error occurred.")
-    
-
+                error_message = {
+                    404: "The requested page was not found",
+                    400: "Bad request. Please check your input parameters.",
+                    401: "Unauthorized access. Please check your credentials.",
+                    500: "Internal server error. Please try again later."
+                }
+                messagebox.showerror("Error", error_message.get(response.status_code, "An unknown error occurred."))
 
 # Create blue and white frames
 blue_frame = tk.Frame(root, bg="#003B95")
@@ -193,30 +183,22 @@ def calendar01sttimeornot():
     global check_in_cal
     if num1 == 0:
         check_in_cal = create_calendar(**check_in_cal_placement_info, font=check_in_cal_font_info)
-        #
+        check_in_cal.bind("<ButtonRelease-1>", lambda event: calendar_date_selected(event, check_in_cal))
         num1 += 1
     else:
         if check_in_cal is not None:
             toggle_calendar(check_in_cal, check_in_cal_placement_info, check_in_cal_font_info)
-    check_in_cal.bind("<FocusIn>", lambda event: calendar_date_selected(event, check_in_cal))
 
 def calendar21sttimeornot():
     global num2
     global check_out_cal
     if num2 == 0:
         check_out_cal = create_calendar(**check_out_cal_placement_info, font=check_out_cal_font_info)
-        #MAybe we can add function to get the date
+        check_out_cal.bind("<ButtonRelease-1>", lambda event: calendar_date_selected(event, check_out_cal))
         num2 += 1
     else:
         if check_out_cal is not None:
             toggle_calendar(check_out_cal, check_out_cal_placement_info, check_out_cal_font_info)
-    check_out_cal.bind("<FocusIn>", lambda event: calendar_date_selected(event, check_out_cal))
-
-def calendar_date_selected(event, calendar):
-    if calendar == check_in_cal:
-        select_check_in_date(check_in_cal)
-    elif calendar == check_out_cal:
-        select_check_out_date(check_out_cal)
 
 styleforuppertext = ttk.Style()
 styleforlowertext = ttk.Style()

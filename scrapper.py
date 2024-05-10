@@ -16,7 +16,7 @@ num_adults = 2
 num_rooms = 1
 num_children = 0
 
-#for testing since gui not handle the data properly
+#for testing since gui can not handle the data properly
 url = "https://www.booking.com/searchresults.html?ss=London&ssne=Prague&ssne_untouched=London&label=gen173nr-1FCAEoggI46AdIM1gEaOQBiAEBmAExuAEXyAEP2AEB6AEB-AECiAIBqAIDuAK-o-qxBsACAdICJDY3ZjkzNjUxLWU2MTMtNDhhOC05N2IxLWJhMzEyZDIwNjIwMNgCBeACAQ&aid=304142&lang=en-us&sb=1&src_elem=sb&src=index&dest_id=-553173&dest_type=city&checkin=2024-05-10&checkout=2024-05-24&group_adults=2&no_rooms=1&group_children=0&efdco=1"
 
 """url = base_url.format(city, city, city, city, checkin_date, checkout_date, num_adults, num_rooms, num_children)
@@ -63,5 +63,9 @@ if checker == True:
 
 # Call the function with the base URL
 #hotel_data = extract_hotel_info(base_url.format('Goa', 'Goa', 'Goa', '4127', '2023-08-28', '2023-08-30', '2', '1', '0'))
+
+df = pd.DataFrame(hotels_data) # Creating a dataframe
+
+df.to_csv('hotel_data.csv', index=False) # Save to CSV file
 print(hotels_data)
 secondwindowstarter+= 1

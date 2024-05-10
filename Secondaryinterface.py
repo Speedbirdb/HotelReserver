@@ -2,10 +2,11 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 from tkinter import StringVar
-#from scrapper import hotels_date, secondwindowstarter
-#from workbenchgui import url
+from scrapper import hotels_date, secondwindowstarter
+from workbenchgui import url
 
-root = tk.Tk()
+if secondwindowstarter == 1:
+    root = tk.Tk()
 root.title("x")
 
 root_width = root.winfo_width()
