@@ -61,20 +61,20 @@ global selected_info
 selected_info = {}
 
 def select_check_in_date(event, calendar):
-    date = calendar.get_date()
-    check_in_var.set(date)
-    selected_info[1] = date
+    selected_date = calendar.get_date()
+    check_in_var.set(selected_date)
+    selected_info[1] = selected_date
     attribute_transfer()
-    print("Check-in date selected")
-    return date
+    print("Check-in date selected:", selected_date)
+    return selected_date
 
 def select_check_out_date(event, calendar):
-    date = calendar.get_date()
-    check_out_var.set(date)
-    selected_info[2] = date
+    selected_date = calendar.get_date()
+    check_out_var.set(selected_date)
+    selected_info[2] = selected_date
     attribute_transfer()
-    print("Check-out date selected")
-    return date
+    print("Check-out date selected:", selected_date)
+    return selected_date
 
 def select_city(event):
     selected_city.set(event)
@@ -90,6 +90,7 @@ def calendar_date_selected(event, calendar):
         select_check_out_date(event, check_out_cal)
 
 def attribute_transfer():
+    print("executed")
     global city, checkin_date, checkout_date
     count = 0
     for x in selected_info:
@@ -146,6 +147,7 @@ def button_click_dropdown():
     w.focus_set()
 
 def toggle_calendar(calendar, placement_info, font_info):
+    print("toogle")
     if calendar.winfo_ismapped():
         calendar.place_forget()
     else:
@@ -157,8 +159,7 @@ current_date = date.today()
 def create_calendar(relx, rely, relwidth, relheight, font):
     cal = Calendar(root, selectmode='day', year=current_date.year, month=5, day=7)
     cal.place(relx=relx, rely=rely, relwidth=relwidth, relheight=relheight)
-    cal.config(font=font)
-    cal.config(mindate=date.today())
+    cal.config(font=font, mindate=date.today())
     # Bind callback function to get the date when the calendar is opened
     cal.bind("<ButtonRelease-1>", lambda event, cal=cal: calendar_date_selected(event, cal))
     return cal
@@ -199,6 +200,7 @@ def calendar21sttimeornot():
     else:
         if check_out_cal is not None:
             toggle_calendar(check_out_cal, check_out_cal_placement_info, check_out_cal_font_info)
+
 
 styleforuppertext = ttk.Style()
 styleforlowertext = ttk.Style()
