@@ -10,6 +10,7 @@ base_url = "https://www.booking.com/searchresults.html?ss={}&ssne={}&ssne_untouc
 
 checkin_date = datetime.now().strftime("%Y-%m-%d")
 checkout_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+print(checkin_date, checkout_date)
 
 num_adults = 2
 num_rooms = 1

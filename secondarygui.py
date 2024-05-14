@@ -11,7 +11,7 @@ except FileNotFoundError:
     exit()
 
 root = tk.Tk()
-root.title("Booking.com")
+root.title("Booking.com/SearchResults")
 
 root_width = root.winfo_width()
 root_height = root.winfo_height()
@@ -51,18 +51,15 @@ def refresh_treeview():
     for _, row in df.iterrows():
         tree.insert("", "end", values=row.tolist())
 
-# Create a new style for the "booking.TLabel"
 styleofbookingcom = ttk.Style()
 styleofbookingcom.configure("booking.TLabel", background="#003B95", foreground="white", font=("Segoe UI", 16, "bold"))
 
 bookingtext = ttk.Label(root, text="booking.com", style="booking.TLabel")
 bookingtext.place(relx=0.9, rely=0.3 - 0.03, anchor="center")
 
-# Place blue and white frames
 blue_frame.place(relx=0, rely=0, relwidth=1, relheight=0.3)
 white_frame.place(relx=0, rely=0.3, relwidth=1, relheight=0.7)
 
-# Sort the DataFrame by the 'price_TRY' column in ascending order
 df.sort_values("price_TRY", axis=0, ascending=True, inplace=True, na_position='first')
 
 style = ttk.Style()
@@ -70,7 +67,7 @@ style.configure("My.Treeview", font=('Segoe UI', 9), background='white', foregro
 style.configure("My.Treeview.Heading", font=('Segoe UI', 12, 'bold'), background='grey', foreground='black')
 
 tree = ttk.Treeview(white_frame, style="My.Treeview")
-columns = list(df.columns)  # Use all columns from the DataFrame
+columns = list(df.columns) 
 tree["columns"] = columns
 for col in columns:
     print(col)
@@ -78,7 +75,6 @@ for col in columns:
         tree.heading(col, text="price_TRY", command=update_prices)
     else:
         tree.heading(col, text=col, anchor=tk.W)
-    #tree.insert("", "end", values=columns, tag="header")
 for _, row in df.iterrows():  
     tree.insert("", "end", values=row.tolist())
 

@@ -4,9 +4,9 @@ from tkinter import messagebox
 from tkinter import StringVar
 from workbenchgui import url
 
-if secondwindowstarter == 1:
-    root = tk.Tk()
-root.title("Booking.com")
+
+root = tk.Tk()
+root.title("Search Results")
 
 root_width = root.winfo_width()
 root_height = root.winfo_height()

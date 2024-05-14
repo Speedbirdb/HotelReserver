@@ -7,8 +7,11 @@ from tkinter.ttk import OptionMenu  # Explicitly importing OptionMenu #first it 
 import tkcalendar as tkcal
 from tkcalendar import Calendar
 from datetime import date, datetime #getting date for blocking user to enter input before the current date
-import requests
-import subprocess
+import requests #to validate url, to prevent any internet or server based connection issue
+import subprocess #start running scrapper, from scrapper the secondarygui, basically to create flow
+import sys #for killing the whole process
+#import scrapper #to save city, checkin_date and checkout_date attributes to scrapper
+
 
 num1 = 0
 num2 = 0
@@ -96,16 +99,16 @@ def attribute_transfer():
         if x is not None:
             count += 1
     if count == 3:
-        checkin_date_obj = datetime.strptime(select_check_in_date(Calendar), "%m/%d/%Y").date()
-        checkout_date_obj = datetime.strptime(select_check_out_date(Calendar), "%m/%d/%Y").date()
-        if checkin_date_obj < checkout_date_obj:
+        checkin_date_obj = datetime.strptime(check_in_cal.get_date(), "%m/%d/%y").date()
+        checkout_date_obj = datetime.strptime(check_out_cal.get_date(), "%m/%d/%y").date()
+        if checkin_date_obj > checkout_date_obj:
             messagebox.showinfo("Information", "Check-out date must be after check-in date.")
         elif (checkout_date_obj - checkin_date_obj).days >= 90:
             messagebox.showinfo("Information", "Maximum stay duration is 90 nights.")
         else:
             city = selected_city.get()
-            checkin_date = select_check_in_date()
-            checkout_date = select_check_out_date()
+            checkin_date = check_in_cal.get_date()
+            checkout_date = check_out_cal.get_date()
             num_adults = 2
             num_rooms = 1
             num_children = 0
@@ -113,9 +116,9 @@ def attribute_transfer():
             response = requests.get(url)
             if response.status_code == 200:
                 print("Response is valid.")
+                subprocess.run(["python", "scrapper.py", city, checkin_date, checkout_date])
                 messagebox.showinfo("Information", "Loading . . .")
-                subprocess.run(["python", "scrapper.py"])
-                root.after(15000, close_window)
+                root.after(15000, sys.exit())
             else:
                 error_message = {
                     404: "The requested page was not found",
@@ -124,9 +127,6 @@ def attribute_transfer():
                     500: "Internal server error. Please try again later."
                 }
                 messagebox.showerror("Error", error_message.get(response.status_code, "An unknown error occurred."))
-
-def close_window():
-    root.destroy()
 
 # Create blue and white frames
 blue_frame = tk.Frame(root, bg="#003B95")
