@@ -6,16 +6,17 @@ from tkinter import Scrollbar
 from tkinter.ttk import OptionMenu  # Explicitly importing OptionMenu #first it did not recognized by the vscode
 import tkcalendar as tkcal
 from tkcalendar import Calendar
-from datetime import date #getting date for blocking user to enter input before the current date
+from datetime import date, datetime #getting date for blocking user to enter input before the current date
 import requests
+import subprocess
 
 num1 = 0
 num2 = 0
 
 root = tk.Tk()
-global url
+global city, checkin_date, checkout_date
 
-#these properties moved here due to an circular import occurrance
+#not associated with scraping just for response validation from site
 root.title("Booking.com")
 base_url = "https://www.booking.com/searchresults.html?ss={}&ssne={}&ssne_untouched={}&efdco=1&label=gen173nr-1FCAEoggI46AdIM1gEaOQBiAEBmAExuAEHyAEP2AEB6AEBAECiAIBqAIDuAKo8sKxBsACAdICJGZlZWVmNGJjLWI2OGEtNGM0OS05ODk0LTM2ZGQ4YzkxYzY0MNgCBeACAQ&aid=304142&lang=en-us&sb=1&src_elem=sb&src=index&dest_id={}&dest_type=city&checkin={}&checkout={}&group_adults={}&no_rooms={}&group_children={}"
 
@@ -31,11 +32,6 @@ european_cities = [
     'Horta', 'Bologna', 'Turin', 'Genoa', 'Verona', 'Padua', 'Trieste', 'Bari', 'Palermo', 'Catania',
     'Naples', 'Salerno', 'Cagliari', 'Olbia', 'Alghero', 'Sofia', 'Varna', 'Plovdiv', 'Burgas', 'Ruse'
 ]
-
-global checker
-checker = False
-
-# Function to adjust the layout based on window size
 def on_resize(event):
     screen_width = root.winfo_width()
     screen_height = root.winfo_height()
@@ -55,12 +51,15 @@ def on_resize(event):
     styleforlowertext.configure("Lower.TLabel", font=("Segoe UI", lower_font_size, "italic"))
 
 check_out_var = StringVar(root)
+check_out_var.trace_add("write", lambda *args: attribute_transfer())
+
 check_in_var = StringVar(root)
+check_out_var.trace_add("write", lambda *args: attribute_transfer())
 
 global selected_info
 selected_info = {}
 
-def select_check_in_date(event, calendar):
+def select_check_in_date(calendar):
     selected_date = calendar.get_date()
     check_in_var.set(selected_date)
     selected_info[1] = selected_date
@@ -68,7 +67,7 @@ def select_check_in_date(event, calendar):
     print("Check-in date selected:", selected_date)
     return selected_date
 
-def select_check_out_date(event, calendar):
+def select_check_out_date(calendar):
     selected_date = calendar.get_date()
     check_out_var.set(selected_date)
     selected_info[2] = selected_date
@@ -83,11 +82,13 @@ def select_city(event):
     print("city selection work")
 
 def calendar_date_selected(event, calendar):
-    print("Calendar date selected")
-    if calendar == check_in_cal:
-        select_check_in_date(event, check_in_cal)
-    elif calendar == check_out_cal:
-        select_check_out_date(event, check_out_cal)
+  selected_date = event.widget.get_date()  # Assuming this retrieves the date
+  print("Calendar date selected:", selected_date)
+  if calendar == check_in_cal:
+    select_check_in_date(calendar)
+  elif calendar == check_out_cal:
+    select_check_out_date(calendar)
+
 
 def attribute_transfer():
     print("executed")
@@ -97,8 +98,8 @@ def attribute_transfer():
         if x is not None:
             count += 1
     if count == 3:
-        checkin_date_obj = date.strptime(select_check_in_date(), "%m/%d/%Y")
-        checkout_date_obj = date.strptime(select_check_out_date(), "%m/%d/%Y")
+        checkin_date_obj = datetime.strptime(select_check_in_date(Calendar), "%m/%d/%Y").date()
+        checkout_date_obj = datetime.strptime(select_check_out_date(Calendar), "%m/%d/%Y").date()
         if checkin_date_obj < checkout_date_obj:
             messagebox.showinfo("Information", "Check-out date must be after check-in date.")
         elif (checkout_date_obj - checkin_date_obj).days >= 90:
@@ -114,9 +115,9 @@ def attribute_transfer():
             response = requests.get(url)
             if response.status_code == 200:
                 print("Response is valid.")
-                checker = True
-                #return a boolean to start scraping process
-                root.destroy()
+                messagebox.showinfo("Information", "Loading . . .")
+                subprocess.run(["python", "scrapper.py"])
+                root.after(15000, close_window)
             else:
                 error_message = {
                     404: "The requested page was not found",
@@ -125,6 +126,9 @@ def attribute_transfer():
                     500: "Internal server error. Please try again later."
                 }
                 messagebox.showerror("Error", error_message.get(response.status_code, "An unknown error occurred."))
+
+def close_window():
+    root.destroy()
 
 # Create blue and white frames
 blue_frame = tk.Frame(root, bg="#003B95")
@@ -160,7 +164,6 @@ def create_calendar(relx, rely, relwidth, relheight, font):
     cal = Calendar(root, selectmode='day', year=current_date.year, month=5, day=7)
     cal.place(relx=relx, rely=rely, relwidth=relwidth, relheight=relheight)
     cal.config(font=font, mindate=date.today())
-    # Bind callback function to get the date when the calendar is opened
     cal.bind("<ButtonRelease-1>", lambda event, cal=cal: calendar_date_selected(event, cal))
     return cal
 
@@ -179,12 +182,15 @@ check_in_cal_font_info = ('Segoe UI', 8)
 check_out_cal_placement_info = {'relx': 0.6, 'rely': 0.5, 'relwidth': calendar_width/root_width, 'relheight': calendar_height/root_height}
 check_out_cal_font_info = ('Segoe UI', 8)
 
+def demofunction():
+    print("demo executed")
+
 def calendar01sttimeornot():
     global num1
     global check_in_cal
     if num1 == 0:
         check_in_cal = create_calendar(**check_in_cal_placement_info, font=check_in_cal_font_info)
-        check_in_cal.bind("<ButtonRelease-1>", lambda event: calendar_date_selected(event, check_in_cal))
+        check_in_cal.bind("<ButtonRelease-1>",select_check_in_date(check_in_cal))
         num1 += 1
     else:
         if check_in_cal is not None:
@@ -195,18 +201,16 @@ def calendar21sttimeornot():
     global check_out_cal
     if num2 == 0:
         check_out_cal = create_calendar(**check_out_cal_placement_info, font=check_out_cal_font_info)
-        check_out_cal.bind("<ButtonRelease-1>", lambda event: calendar_date_selected(event, check_out_cal))
+        check_out_cal.bind("<ButtonRelease-1>", select_check_out_date(check_out_cal))
         num2 += 1
     else:
         if check_out_cal is not None:
             toggle_calendar(check_out_cal, check_out_cal_placement_info, check_out_cal_font_info)
 
-
 styleforuppertext = ttk.Style()
 styleforlowertext = ttk.Style()
 styleofbookingcom = ttk.Style()
 
-# Initial font sizes for Upper and Lower text
 initial_upper_font_size = 58
 initial_lower_font_size = 20
 

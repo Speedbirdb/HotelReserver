@@ -2,12 +2,11 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 from tkinter import StringVar
-from scrapper import hotels_date, secondwindowstarter
 from workbenchgui import url
 
 if secondwindowstarter == 1:
     root = tk.Tk()
-root.title("x")
+root.title("Booking.com")
 
 root_width = root.winfo_width()
 root_height = root.winfo_height()
@@ -37,6 +36,17 @@ bookingtext.place(relx=0.9, rely=0.3 - 0.03, anchor="center")
 # Place blue and white frames
 blue_frame.place(relx=0, rely=0, relwidth=1, relheight=0.3)
 white_frame.place(relx=0, rely=0.3, relwidth=1, relheight=0.7)
+
+# Create a Treeview widget to display hotel data
+tree = ttk.Treeview(white_frame)
+tree["columns"] = list(hotels_date[0].keys())
+tree.heading("#0", text="Index")
+for col in hotels_date[0].keys():
+    tree.heading(col, text=col)
+for i, row in enumerate(hotels_date):
+    tree.insert("", "end", text=i, values=list(row.values()))
+
+tree.pack(fill="both", expand=True)
 
 root.state("zoomed")
 root.mainloop()
