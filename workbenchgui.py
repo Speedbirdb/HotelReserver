@@ -81,14 +81,12 @@ def select_city(event):
     attribute_transfer()
     print("city selection work")
 
-def calendar_date_selected(event, calendar):
-  selected_date = event.widget.get_date()  # Assuming this retrieves the date
-  print("Calendar date selected:", selected_date)
-  if calendar == check_in_cal:
-    select_check_in_date(calendar)
-  elif calendar == check_out_cal:
-    select_check_out_date(calendar)
-
+def calendar_date_selected(calendar):
+    print("Calendar date selected")
+    if calendar == check_in_cal:
+        select_check_in_date(check_in_cal)
+    elif calendar == check_out_cal:
+        select_check_out_date(check_out_cal)
 
 def attribute_transfer():
     print("executed")
@@ -164,7 +162,7 @@ def create_calendar(relx, rely, relwidth, relheight, font):
     cal = Calendar(root, selectmode='day', year=current_date.year, month=5, day=7)
     cal.place(relx=relx, rely=rely, relwidth=relwidth, relheight=relheight)
     cal.config(font=font, mindate=date.today())
-    cal.bind("<ButtonRelease-1>", lambda event, cal=cal: calendar_date_selected(event, cal))
+    cal.bind("<<CalendarSelected>>", lambda event, cal=cal: calendar_date_selected(cal))
     return cal
 
 check_in_cal = None
@@ -190,22 +188,18 @@ def calendar01sttimeornot():
     global check_in_cal
     if num1 == 0:
         check_in_cal = create_calendar(**check_in_cal_placement_info, font=check_in_cal_font_info)
-        check_in_cal.bind("<ButtonRelease-1>",select_check_in_date(check_in_cal))
         num1 += 1
     else:
-        if check_in_cal is not None:
-            toggle_calendar(check_in_cal, check_in_cal_placement_info, check_in_cal_font_info)
+        toggle_calendar(check_in_cal, check_in_cal_placement_info, check_in_cal_font_info)
 
 def calendar21sttimeornot():
     global num2
     global check_out_cal
     if num2 == 0:
         check_out_cal = create_calendar(**check_out_cal_placement_info, font=check_out_cal_font_info)
-        check_out_cal.bind("<ButtonRelease-1>", select_check_out_date(check_out_cal))
         num2 += 1
     else:
-        if check_out_cal is not None:
-            toggle_calendar(check_out_cal, check_out_cal_placement_info, check_out_cal_font_info)
+        toggle_calendar(check_out_cal, check_out_cal_placement_info, check_out_cal_font_info)
 
 styleforuppertext = ttk.Style()
 styleforlowertext = ttk.Style()
